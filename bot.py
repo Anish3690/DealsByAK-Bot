@@ -1,13 +1,9 @@
 import logging
 import re
+import asyncio
 import os
 from telegram import Update
-from telegram.ext import (
-    ApplicationBuilder,
-    ContextTypes,
-    MessageHandler,
-    filters
-)
+from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
 # === CONFIGURATION === #
 BOT_TOKEN = "7900527205:AAEXzN8Kg9y8TkTxIZZP1kgi5HhZYYgfGAs"
@@ -15,14 +11,13 @@ SOURCE_CHANNELS = ["@gosfdeals", "@techscannerr", "@PremiumDeals"]
 TARGET_CHANNEL = "@Ak3690"
 AFFILIATE_TAG = "dealsbyak04-21"
 WEBHOOK_DOMAIN = "https://dealsbyak-bot.onrender.com"
-WEBHOOK_PATH = f"/{BOT_TOKEN}"
+WEBHOOK_SECRET_PATH = "/webhook"
 
-# === LOGGING SETUP === #
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+# === LOGGING === #
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# === AFFILIATE LINK CONVERTER === #
+# === LINK CONVERTER === #
 def convert_amazon_links(text):
     pattern = r"(https?://(?:www\.)?amazon\.in(?:/[^\s]*)?)"
     def replace_link(match):
@@ -55,17 +50,16 @@ async def main():
 
     app.add_handler(MessageHandler(filters.ALL, handle_message))
 
-    # Set webhook directly before starting
-    await app.bot.set_webhook(url=WEBHOOK_DOMAIN + WEBHOOK_PATH)
+    # Set webhook
+    await app.bot.set_webhook(url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}")
 
-    # Start webhook server WITHOUT webhook_path
+    # Start webhook server (no "path" arg needed)
     await app.run_webhook(
         listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8080)),
-        path=WEBHOOK_PATH
+        port=int(os.environ.get("PORT", 10000)),
+        webhook_url=f"{WEBHOOK_DOMAIN = "https://dealsbyak-bot.onrender.com"
+}{WEBHOOK_SECRET_PATH})
     )
 
-
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
