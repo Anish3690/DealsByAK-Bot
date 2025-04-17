@@ -1,7 +1,8 @@
 import logging
 import re
-from telegram import Bot, Update
-from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
+import os
+from telegram import Update
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
 # === CONFIGURATION === #
 BOT_TOKEN = "7900527205:AAEXzN8Kg9y8TkTxIZZP1kgi5HhZYYgfGAs"
@@ -10,13 +11,11 @@ TARGET_CHANNEL = "@Ak3690"
 AFFILIATE_TAG = "dealsbyak04-21"
 
 # === LOGGING SETUP === #
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # === AFFILIATE LINK CONVERTER === #
 def convert_amazon_links(text):
-    # Detect and convert Amazon links to affiliate links
     pattern = r"(https?://(?:www\.)?amazon\.in(?:/[^\s]*)?)"
     def replace_link(match):
         url = match.group(1)
@@ -27,7 +26,7 @@ def convert_amazon_links(text):
     return re.sub(pattern, replace_link, text)
 
 # === MESSAGE HANDLER === #
-def handle_message(update: Update, context: CallbackContext):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.effective_message
     source = update.effective_chat.username
 
@@ -38,19 +37,24 @@ def handle_message(update: Update, context: CallbackContext):
     updated_text = convert_amazon_links(text)
 
     if message.text:
-        context.bot.send_message(chat_id=TARGET_CHANNEL, text=updated_text)
+        await context.bot.send_message(chat_id=TARGET_CHANNEL, text=updated_text)
     elif message.caption and message.photo:
-        context.bot.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo[-1].file_id, caption=updated_text)
+        await context.bot.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo[-1].file_id, caption=updated_text)
 
 # === MAIN FUNCTION === #
-def main():
-    updater = Updater(BOT_TOKEN, use_context=True)
-    dp = updater.dispatcher
+async def main():
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    dp.add_handler(MessageHandler(Filters.chat(username=SOURCE_CHANNELS) & Filters.all, handle_message))
+    app.add_handler(MessageHandler(filters.ALL & filters.Chat(username=SOURCE_CHANNELS), handle_message))
 
-    updater.start_polling()
-    updater.idle()
+    webhook_url = f"https://dealsbyak-bot.onrender.com/{BOT_TOKEN}"
+    await app.bot.set_webhook(webhook_url)
+    await app.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8443)),
+        webhook_url=webhook_url
+    )
 
 if __name__ == '__main__':
-    main()
+    import asyncio
+    asyncio.run(main())
