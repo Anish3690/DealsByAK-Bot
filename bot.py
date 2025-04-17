@@ -53,13 +53,11 @@ async def main():
     # Set webhook
     await app.bot.set_webhook(url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}")
 
-    # Start webhook server (no "path" arg needed)
+    # Start webhook server
     await app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 10000)),
-        webhook_url = f"{WEBHOOK_DOMAIN}/webhook"
-
-}{WEBHOOK_SECRET_PATH})
+        webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
     )
 
 if __name__ == "__main__":
