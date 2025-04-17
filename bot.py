@@ -57,7 +57,8 @@ async def main():
     await app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 10000)),
-        webhook_url=f"{WEBHOOK_DOMAIN = "https://dealsbyak-bot.onrender.com"
+        webhook_url = f"{WEBHOOK_DOMAIN}/webhook"
+
 }{WEBHOOK_SECRET_PATH})
     )
 
