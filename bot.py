@@ -55,13 +55,16 @@ async def main():
 
     app.add_handler(MessageHandler(filters.ALL, handle_message))
 
+    # Set webhook directly before starting
     await app.bot.set_webhook(url=WEBHOOK_DOMAIN + WEBHOOK_PATH)
 
-    app.run_webhook(
+    # Start webhook server WITHOUT webhook_path
+    await app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 8080)),
-        webhook_path=WEBHOOK_PATH
+        path=WEBHOOK_PATH
     )
+
 
 if __name__ == "__main__":
     import asyncio
