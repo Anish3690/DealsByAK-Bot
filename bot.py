@@ -47,18 +47,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === MAIN FUNCTION === #
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-
     app.add_handler(MessageHandler(filters.ALL, handle_message))
 
     # Set webhook
     await app.bot.set_webhook(url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}")
 
-    # Start webhook server
+    # Start webhook
     await app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 10000)),
         webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
     )
 
+# === LAUNCH === #
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
