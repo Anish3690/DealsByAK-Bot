@@ -2,16 +2,24 @@ import logging
 import re
 import os
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    MessageHandler,
+    filters
+)
 
 # === CONFIGURATION === #
 BOT_TOKEN = "7900527205:AAEXzN8Kg9y8TkTxIZZP1kgi5HhZYYgfGAs"
 SOURCE_CHANNELS = ["@gosfdeals", "@techscannerr", "@PremiumDeals"]
 TARGET_CHANNEL = "@Ak3690"
 AFFILIATE_TAG = "dealsbyak04-21"
+WEBHOOK_DOMAIN = "https://dealsbyak-bot.onrender.com"
+WEBHOOK_PATH = f"/{BOT_TOKEN}"
 
 # === LOGGING SETUP === #
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # === AFFILIATE LINK CONVERTER === #
@@ -45,16 +53,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app.add_handler(MessageHandler(filters.ALL & filters.Chat(username=SOURCE_CHANNELS), handle_message))
+    app.add_handler(MessageHandler(filters.ALL, handle_message))
 
-    webhook_url = f"https://dealsbyak-bot.onrender.com/{BOT_TOKEN}"
-    await app.bot.set_webhook(webhook_url)
-    await app.run_webhook(
+    await app.bot.set_webhook(url=WEBHOOK_DOMAIN + WEBHOOK_PATH)
+
+    app.run_webhook(
         listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8443)),
-        webhook_url=webhook_url
+        port=int(os.environ.get("PORT", 8080)),
+        webhook_path=WEBHOOK_PATH
     )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
