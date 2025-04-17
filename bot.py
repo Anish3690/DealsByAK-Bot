@@ -1,6 +1,5 @@
 import logging
 import re
-import asyncio
 import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
@@ -44,22 +43,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif message.caption and message.photo:
         await context.bot.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo[-1].file_id, caption=updated_text)
 
-# === MAIN FUNCTION === #
-async def main():
+# === ENTRY POINT === #
+if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.ALL, handle_message))
 
-    # Set webhook
-    await app.bot.set_webhook(url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}")
-
-    # Start webhook
-    await app.run_webhook(
+    # Set webhook and run
+    app.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 10000)),
         webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
     )
-
-# === LAUNCH === #
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
