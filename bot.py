@@ -1,24 +1,22 @@
-### ✅ CLEANED & FIXED `bot.py` USING `python-telegram-bot` v20.7 ###
-
 import logging
-import os
 import re
+import os
 from telegram import Update
-from telegram.ext import Application, ApplicationBuilder, MessageHandler, ContextTypes, filters
+from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
 # === CONFIGURATION === #
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 SOURCE_CHANNELS = ["@gosfdeals", "@techscannerr", "@PremiumDeals"]
 TARGET_CHANNEL = "@Ak3690"
-AFFILIATE_TAG = "dealsbyak04-21"
-WEBHOOK_DOMAIN = os.environ.get("RENDER_EXTERNAL_URL", "https://yourdomain.com")
+AFFILIATE_TAG = os.getenv("AFFILIATE_TAG", "dealsbyak04-21")
+WEBHOOK_DOMAIN = os.getenv("WEBHOOK_DOMAIN")
 WEBHOOK_SECRET_PATH = "/webhook"
 
 # === LOGGING === #
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# === AMAZON AFFILIATE LINK CONVERTER === #
+# === LINK CONVERTER === #
 def convert_amazon_links(text):
     pattern = r"(https?://(?:www\.)?amazon\.in(?:/[^\s]*)?)"
     def replace_link(match):
@@ -45,21 +43,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif message.caption and message.photo:
         await context.bot.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo[-1].file_id, caption=updated_text)
 
-# === MAIN FUNCTION === #
-async def main():
+# === ENTRY POINT === #
+if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.ALL, handle_message))
 
-    # Deploy webhook listener on Render or polling locally
-    if os.environ.get("RENDER" or False):
-        await app.run_webhook(
-            listen="0.0.0.0",
-            port=int(os.environ.get("PORT", 10000)),
-            webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
-        )
-    else:
-        await app.run_polling()
-
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    # Set webhook and run
+    app.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 10000)),
+        webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
+    )
