@@ -1,18 +1,14 @@
-### ✅ UPDATED `userbot.py` USING SESSION STRING ###
-
 from pyrogram import Client, filters
-import re
-import os
+import re, os
 
-# === CONFIGURATION === #
-API_ID = int(os.environ.get("API_ID", 12345))
-API_HASH = os.environ.get("API_HASH", "your_hash")
-SESSION_STRING = os.environ.get("SESSION_STRING")  # Set via env for security
+API_ID = int(os.environ.get("API_ID"))
+API_HASH = os.environ.get("API_HASH")
+SESSION_NAME = "DealsByAKSession"
+
 SOURCE_CHANNELS = ["gosfdeals", "techscannerr", "PremiumDeals"]
 TARGET_CHANNEL = "Ak3690"
 AFFILIATE_TAG = "dealsbyak04-21"
 
-# === AMAZON LINK CONVERTER === #
 def convert_amazon_links(text):
     pattern = r"(https?://(?:www\.)?amazon\.in[^\s]*)"
     def replace_link(match):
@@ -23,8 +19,7 @@ def convert_amazon_links(text):
         return f"{url}{sep}tag={AFFILIATE_TAG}"
     return re.sub(pattern, replace_link, text)
 
-# === INIT CLIENT === #
-app = Client(name=SESSION_STRING, api_id=API_ID, api_hash=API_HASH, in_memory=True)
+app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH)
 
 @app.on_message(filters.channel & filters.chat(SOURCE_CHANNELS))
 async def forward_and_convert(client, message):
@@ -37,10 +32,10 @@ async def forward_and_convert(client, message):
         else:
             await client.send_message(chat_id=TARGET_CHANNEL, text=converted_text)
 
-        print(f"✅ Forwarded from @{message.chat.username}!")
+        print(f"Forwarded from @{message.chat.username}: {converted_text[:50]}...")
 
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
-print("🚀 Userbot running...")
+print("Userbot is running... Monitoring source channels.")
 app.run()
