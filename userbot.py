@@ -1,10 +1,13 @@
+### ✅ UPDATED `userbot.py` USING SESSION STRING ###
+
 from pyrogram import Client, filters
 import re
+import os
 
 # === CONFIGURATION === #
-API_ID = 27420567
-API_HASH = "9c52853ecccd13f5dbbf36db5acd2b31"
-SESSION_NAME = "DealsByAKSession"  # or whatever your .session file is named (without .session)
+API_ID = int(os.environ.get("API_ID", 12345))
+API_HASH = os.environ.get("API_HASH", "your_hash")
+SESSION_STRING = os.environ.get("SESSION_STRING")  # Set via env for security
 SOURCE_CHANNELS = ["gosfdeals", "techscannerr", "PremiumDeals"]
 TARGET_CHANNEL = "Ak3690"
 AFFILIATE_TAG = "dealsbyak04-21"
@@ -21,7 +24,7 @@ def convert_amazon_links(text):
     return re.sub(pattern, replace_link, text)
 
 # === INIT CLIENT === #
-app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH)
+app = Client(name=SESSION_STRING, api_id=API_ID, api_hash=API_HASH, in_memory=True)
 
 @app.on_message(filters.channel & filters.chat(SOURCE_CHANNELS))
 async def forward_and_convert(client, message):
@@ -34,11 +37,10 @@ async def forward_and_convert(client, message):
         else:
             await client.send_message(chat_id=TARGET_CHANNEL, text=converted_text)
 
-        print(f"Forwarded from @{message.chat.username}: {converted_text[:50]}...")
+        print(f"✅ Forwarded from @{message.chat.username}!")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"❌ Error: {e}")
 
-# === START THE BOT === #
-print("Userbot is running... Monitoring source channels.")
+print("🚀 Userbot running...")
 app.run()
