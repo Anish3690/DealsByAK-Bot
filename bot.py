@@ -1,22 +1,24 @@
+### ✅ CLEANED & FIXED `bot.py` USING `python-telegram-bot` v20.7 ###
+
 import logging
-import re
 import os
+import re
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
+from telegram.ext import Application, ApplicationBuilder, MessageHandler, ContextTypes, filters
 
 # === CONFIGURATION === #
-BOT_TOKEN = "7900527205:AAEXzN8Kg9y8TkTxIZZP1kgi5HhZYYgfGAs"
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN")
 SOURCE_CHANNELS = ["@gosfdeals", "@techscannerr", "@PremiumDeals"]
 TARGET_CHANNEL = "@Ak3690"
 AFFILIATE_TAG = "dealsbyak04-21"
-WEBHOOK_DOMAIN = "https://dealsbyak-bot.onrender.com"
+WEBHOOK_DOMAIN = os.environ.get("RENDER_EXTERNAL_URL", "https://yourdomain.com")
 WEBHOOK_SECRET_PATH = "/webhook"
 
 # === LOGGING === #
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# === LINK CONVERTER === #
+# === AMAZON AFFILIATE LINK CONVERTER === #
 def convert_amazon_links(text):
     pattern = r"(https?://(?:www\.)?amazon\.in(?:/[^\s]*)?)"
     def replace_link(match):
@@ -43,14 +45,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif message.caption and message.photo:
         await context.bot.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo[-1].file_id, caption=updated_text)
 
-# === ENTRY POINT === #
-if __name__ == "__main__":
+# === MAIN FUNCTION === #
+async def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.ALL, handle_message))
 
-    # Set webhook and run
-    app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 10000)),
-        webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
-    )
+    # Deploy webhook listener on Render or polling locally
+    if os.environ.get("RENDER" or False):
+        await app.run_webhook(
+            listen="0.0.0.0",
+            port=int(os.environ.get("PORT", 10000)),
+            webhook_url=f"{WEBHOOK_DOMAIN}{WEBHOOK_SECRET_PATH}"
+        )
+    else:
+        await app.run_polling()
+
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
