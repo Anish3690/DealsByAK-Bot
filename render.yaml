@@ -1,24 +1,22 @@
 services:
   - type: web
-    name: DealsByAKBot
+    name: dealsbyak-bot
     env: python
-    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     envVars:
       - key: BOT_TOKEN
-        sync: false
+        fromSecret: BOT_TOKEN
       - key: WEBHOOK_DOMAIN
-        sync: false
+        fromSecret: WEBHOOK_DOMAIN
 
-  - type: background
-    name: DealsByAKUserbot
+  - type: worker
+    name: dealsbyak-userbot
     env: python
-    plan: free
-    buildCommand: pip install -r userbot_requirements.txt
+    buildCommand: pip install -r requirements.txt
     startCommand: python userbot.py
     envVars:
       - key: API_ID
-        sync: false
+        fromSecret: API_ID
       - key: API_HASH
-        sync: false
+        fromSecret: API_HASH
