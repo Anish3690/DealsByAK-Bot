@@ -1,25 +1,19 @@
 from pyrogram import Client, filters
-import re, os, requests
+import re
+import requests
 
-# API Details
-API_ID = int(os.environ.get("API_ID"))
-API_HASH = os.environ.get("API_HASH")
+# ====== Your Config ======
+API_ID = 27420567
+API_HASH = "9c52853ecccd13f5dbbf36db5acd2b31"
 SESSION_NAME = "DealsByAKSession"
 
-# Channels
-SOURCE_CHANNELS = ["gosfdeals", "techscannerr", "PremiumDeals"]  # without @
-TARGET_CHANNEL = "Ak3690"  # without @
+SOURCE_CHANNELS = ["gosfdeals", "techscannerr", "PremiumDeals"]  # source channels
+TARGET_CHANNEL = "Ak3690"  # your channel username without @
+AFFILIATE_TAG = "dealsbyak04-21"  # Amazon affiliate tag
+EARNKARO_USER_ID = "2904863"  # your EarnKaro User ID
+# ===========================
 
-# Amazon Affiliate
-AFFILIATE_TAG = "dealsbyak04-21"
-
-# EarnKaro Details
-EARNKARO_USER_ID = "2904863"  # <-- Your real User ID
-
-# Initialize Pyrogram Client
-app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH)
-
-# Amazon Affiliate Link Converter
+# Function to convert Amazon links
 def convert_amazon_links(text):
     pattern = r"(https?://(?:www\.)?amazon\.in[^\s]*)"
     def replace_link(match):
@@ -30,45 +24,42 @@ def convert_amazon_links(text):
         return f"{url}{sep}tag={AFFILIATE_TAG}"
     return re.sub(pattern, replace_link, text)
 
-# EarnKaro Link Generator
+# Function to convert Ajio, Myntra, Flipkart links via EarnKaro
 def convert_earnkaro_links(text):
-    pattern = r"(https?://(?:www\.)?(?:ajio|myntra|flipkart)\.com[^\s]*)"
-    links = re.findall(pattern, text)
-    for link in links:
-        try:
-            api_url = f"https://earnkaro.com/api/v2/deals/generate-affiliate-link?url={link}&user_id={EARNKARO_USER_ID}"
-            response = requests.get(api_url)
-            if response.status_code == 200:
-                data = response.json()
-                affiliate_link = data.get("shortenedUrl") or data.get("affiliateUrl")
-                if affiliate_link:
-                    text = text.replace(link, affiliate_link)
-        except Exception as e:
-            print(f"EarnKaro conversion error: {e}")
+    patterns = [
+        r"(https?://(?:www\.)?ajio\.com[^\s]*)",
+        r"(https?://(?:www\.)?myntra\.com[^\s]*)",
+        r"(https?://(?:www\.)?flipkart\.com[^\s]*)"
+    ]
+    for pattern in patterns:
+        for match in re.findall(pattern, text):
+            ek_url = f"https://ekaro.in/enkr{EARNKARO_USER_ID}?deeplink={match}"
+            text = text.replace(match, ek_url)
     return text
 
-# Main function to Forward and Convert Messages
+# Pyrogram Client
+app = Client(SESSION_NAME, api_id=API_ID, api_hash=API_HASH)
+
 @app.on_message(filters.channel & filters.chat(SOURCE_CHANNELS))
-async def forward_and_convert(client, message):
+async def copy_and_convert(client, message):
     try:
         text = message.text or message.caption or ""
         
-        # Step 1: Convert Amazon links
-        text = convert_amazon_links(text)
-        
-        # Step 2: Convert EarnKaro links (Ajio, Myntra, Flipkart)
-        text = convert_earnkaro_links(text)
+        # First Amazon, then EarnKaro
+        converted_text = convert_amazon_links(text)
+        converted_text = convert_earnkaro_links(converted_text)
 
-        # Sending Photo or Text
         if message.photo:
-            await client.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo.file_id, caption=text)
+            await client.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo.file_id, caption=converted_text)
+        elif message.document:
+            await client.send_document(chat_id=TARGET_CHANNEL, document=message.document.file_id, caption=converted_text)
         else:
-            await client.send_message(chat_id=TARGET_CHANNEL, text=text)
+            await client.send_message(chat_id=TARGET_CHANNEL, text=converted_text)
 
-        print(f"Sent successfully: {text[:50]}...")
+        print(f"✅ Message copied successfully: {converted_text[:50]}...")
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"❌ Error: {e}")
 
-print("✅ Userbot is running... Monitoring channels.")
+print("🚀 Userbot is running... Monitoring source channels.")
 app.run()
