@@ -62,9 +62,18 @@ async def handle_message(client, message):
         text = convert_with_earnkaro(text)
 
         if message.photo:
-            await client.send_photo(chat_id=TARGET_CHANNEL, photo=message.photo.file_id, caption=text)
+            await client.send_photo(
+                chat_id=TARGET_CHANNEL,
+                photo=message.photo.file_id,
+                caption=text,
+                disable_web_page_preview=True
+            )
         else:
-            await client.send_message(chat_id=TARGET_CHANNEL, text=text)
+            await client.send_message(
+                chat_id=TARGET_CHANNEL,
+                text=text,
+                disable_web_page_preview=True
+            )
 
         print(f"✅ Posted to @{TARGET_CHANNEL}: {text[:60]}...")
 
